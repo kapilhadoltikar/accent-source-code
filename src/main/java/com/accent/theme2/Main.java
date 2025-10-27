@@ -129,13 +129,13 @@ package com.accent.theme2;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+//import javafx.scene.Scene;
+//import javafx.scene.control.Label;
+//import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.awt.*;
-import java.awt.event.ActionListener;
+//import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -167,7 +167,14 @@ public class Main extends Application {
     private void setupSystemTray(Stage stage) {
         try {
             SystemTray tray = SystemTray.getSystemTray();
-            Image image = Toolkit.getDefaultToolkit().createImage("/icon.png"); // optional icon file
+
+            // Load the new icon from resources
+            java.net.URL iconURL = getClass().getResource("/tray-icon.png");
+            if (iconURL == null) {
+                throw new IllegalStateException("Icon resource '/tray-icon.png' not found");
+            }
+
+            Image image = Toolkit.getDefaultToolkit().getImage(iconURL);
 
             PopupMenu popup = new PopupMenu();
 
@@ -189,7 +196,7 @@ public class Main extends Application {
             popup.addSeparator();
             popup.add(exitItem);
 
-            TrayIcon trayIcon = new TrayIcon(image, "Dark Mode Toggler", popup);
+            TrayIcon trayIcon = new TrayIcon(image, "Dark / Light Mode", popup);
             trayIcon.setImageAutoSize(true);
             tray.add(trayIcon);
 
@@ -378,7 +385,7 @@ public class Main extends Application {
 //    private void setupSystemTray() {
 //        try {
 //            SystemTray tray = SystemTray.getSystemTray();
-//            Image image = Toolkit.getDefaultToolkit().createImage("icon.png"); // Optional icon (16x16 or 24x24)
+//            Image image = Toolkit.getDefaultToolkit().createImage("tray-icon.png"); // Optional icon (16x16 or 24x24)
 //
 //            PopupMenu popup = new PopupMenu();
 //
