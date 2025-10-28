@@ -11,21 +11,38 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
+        <java.version>21.0.8</java.version>
+        <javafx.version>21.0.6</javafx.version>
         <junit.version>5.12.1</junit.version>
     </properties>
 
     <dependencies>
+        <!-- JavaFX dependencies with OS-specific classifier -->
+        <!-- Change "win" to "mac" or "linux" when building for that platform -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>21.0.6</version>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>21.0.6</version>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
         </dependency>
 
+        <!-- Optional (if you use graphics or media) -->
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+
+        <!-- JUnit (for tests) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -42,35 +59,134 @@
 
     <build>
         <plugins>
+            <!-- Java compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>25</source>
-                    <target>25</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
+
+            <!-- JavaFX Maven Plugin (for mvn javafx:run) -->
+<!--            <plugin>-->
+<!--                <groupId>org.openjfx</groupId>-->
+<!--                <artifactId>javafx-maven-plugin</artifactId>-->
+<!--                <version>0.0.8</version>-->
+<!--                <configuration>-->
+<!--                    <mainClass>com.accent.theme2.App</mainClass>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+
+
+            <!-- JavaFX Maven Plugin (for run & jlink) -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.accent.theme2.App</mainClass>
+                    <launcher>theme2</launcher>
+                    <jlinkZipName>theme2-image</jlinkZipName>
+                    <jlinkImageName>theme2</jlinkImageName>
+                    <jlinkVerbose>true</jlinkVerbose>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.accent.theme2.App</mainClass>
+                    <arguments>
+                        <argument>--enable-native-access=javafx.graphics</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+
+
+            <!-- Shade plugin for fat JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
-                        <!-- Default configuration for running with: mvn clean javafx:run -->
-                        <id>default-cli</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
                         <configuration>
-                            <mainClass>com.accent.theme2/com.accent.theme2.HelloApplication</mainClass>
-                            <launcher>app</launcher>
-                            <jlinkZipName>app</jlinkZipName>
-                            <jlinkImageName>app</jlinkImageName>
-                            <noManPages>true</noManPages>
-                            <stripDebug>true</stripDebug>
-                            <noHeaderFiles>true</noHeaderFiles>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.accent.theme2.App</mainClass>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+<!--            &lt;!&ndash; Run jpackage automatically &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.codehaus.mojo</groupId>-->
+<!--                <artifactId>exec-maven-plugin</artifactId>-->
+<!--                <version>3.1.0</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>package-app</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>exec</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+
+<!--                            <executable>${env.JAVA_HOME}/bin/jpackage</executable>-->
+<!--                            <arguments>-->
+<!--                                <argument>&#45;&#45;enable-native-access=javafx.graphics</argument>-->
+<!--                                <argument>&#45;&#45;input</argument>-->
+<!--                                <argument>${project.build.directory}</argument>-->
+<!--                                <argument>&#45;&#45;name</argument>-->
+<!--                                <argument>JavaFXApp</argument>-->
+<!--                                <argument>&#45;&#45;main-jar</argument>-->
+<!--                                <argument>${project.build.finalName}.jar</argument>-->
+<!--                                <argument>&#45;&#45;main-class</argument>-->
+<!--                                <argument>com.accent.theme2.App</argument>-->
+<!--                                <argument>&#45;&#45;type</argument>-->
+<!--                                <argument>exe</argument>-->
+<!--                                <argument>&#45;&#45;icon</argument>-->
+<!--                                <argument>src/main/resources/tray-icon.ico</argument>-->
+<!--                            </arguments>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+
+
+
         </plugins>
     </build>
 </project>
